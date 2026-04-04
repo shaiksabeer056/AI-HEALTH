@@ -392,6 +392,85 @@ body {
     color: rgba(255,255,255,0.95);
 }
 
+/* Upload Zone */
+.upload-zone {
+    background: rgba(255,255,255,0.1);
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-zone:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(102,126,234,0.6);
+}
+
+.upload-label {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    display: block;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.upload-zone input[type="file"] {
+    display: none;
+}
+
+.upload-zone small {
+    color: rgba(255,255,255,0.6);
+}
+
+/* Symptoms Search */
+.symptoms-search {
+    margin-bottom: 15px;
+}
+
+.symptoms-search input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 15px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1em;
+    backdrop-filter: blur(10px);
+}
+
+.symptoms-search input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.symptoms-search input:focus {
+    border-color: rgba(102,126,234,0.8);
+    box-shadow: 0 0 0 4px rgba(102,126,234,0.2);
+}
+
+/* Dynamic Symptoms */
+.symptoms-select {
+    max-height: 300px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.symptom-chip {
+    background: rgba(46, 204, 113, 0.2);
+    border: 1px solid rgba(46,204,113,0.4);
+}
+
+.symptom-chip input[type="checkbox"]:checked + span {
+    color: #2ecc71;
+    font-weight: 600;
+}
+
 .checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -419,6 +498,40 @@ body {
     width: 20px;
     height: 20px;
     accent-color: #667eea;
+}
+
+/* Parsed Preview */
+.parsed-preview {
+    background: rgba(52, 152, 219, 0.2);
+    border: 1px solid rgba(52,152,219,0.4);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.parsed-preview.hidden {
+    display: none;
+}
+
+.parsed-preview strong {
+    color: #3498db;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    background: rgba(52,152,219,0.4);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
 }
 
 .gradient-btn {

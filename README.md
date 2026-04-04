@@ -17,12 +17,25 @@ Static frontend app for predicting health risks using mock AI (JS-based scoring)
 
 Pure HTML/CSS/JS. No server needed!
 
+## ✨ New Features: Doctor Reports + 200+ Diseases
+- **📁 Upload Doctor Reports** (JSON/TXT/PDF): AI parses symptoms automatically (keyword/JSON extract).
+- **🔍 Searchable Symptoms**: 100+ symptoms from comprehensive diseases list (cardio, diabetes, cancer, etc.).
+- **🧠 Smart Prediction**: Factors uploaded/selected symptoms into risk score (critical symptoms boost risk).
+- Symptoms preview chips, enhanced risks/advice.
 
+## Usage
+1. Sign Up/Login.
+2. Fill basics (age/BMI/BP).
+3. **Upload reports** → AI auto-selects symptoms.
+4. **Search/select** more symptoms.
+5. Predict → See risks based on symptoms + data.
+
+**Saves to data/users.json with parsed symptoms/history.**
 
 ## Features
-- User form: age, gender, BMI inputs, BP/cholesterol sliders, symptoms checkboxes.
-- Mock AI: Calculates risk score (0-100), predicts risks (diabetes, heart disease, hypertension).
-- Visuals: Pie chart (risk breakdown), bar chart (health metrics).
-- Responsive, saves history to localStorage.
+- Beautiful glassmorphism UI w/ animations.
+- Client-side parsing, localStorage + JSON export.
+- Responsive, mock neural scoring w/ symptom integration.
+- data/diseases.json (200+ world diseases), symptoms-map.json (risks).
 
 Built by BLACKBOXAI.

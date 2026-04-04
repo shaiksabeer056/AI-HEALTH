@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUser = null;
     let users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
     let riskChart, metricsChart;
+    let diseasesData = null;
+    let symptomsMap = null;
+    let selectedSymptoms = new Set();
+    let allSymptoms = [];
 
     // Hash password
     function hash(str) {
@@ -101,6 +105,10 @@ document.addEventListener('DOMContentLoaded', function() {
         app.classList.remove('hidden');
         updateUserInfo();
         loadUserHistory();
+        loadHealthData();  // Load diseases/symptoms
+        // New event listeners
+        document.getElementById('reportUpload').onchange = (e) => parseReports(e.target.files);
+        document.getElementById('symptomsSearch').oninput = (e) => updateSymptomsUI(e.target.value);
     }
 
     function showAuth() {
@@ -123,8 +131,108 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!currentUser) return;
         const predictions = currentUser.predictions || [];
         historyList.innerHTML = predictions.slice(0, 10).map(p => 
-            `<li>${p.date} - Score: ${p.prediction.score}</li>`
+            `<li>${p.date} - Score: ${Math.round(p.prediction.score)}</li>`
         ).join('') || '<li>No predictions yet</li>';
+    }
+
+    // Load diseases and symptoms map
+    async function loadHealthData() {
+        try {
+            const [diseasesRes, mapRes] = await Promise.all([
+                fetch('data/diseases.json'),
+                fetch('data/symptoms-map.json')
+            ]);
+            diseasesData = await diseasesRes.json();
+            symptomsMap = await mapRes.json();
+            allSymptoms = diseasesData.allSymptoms;
+            updateSymptomsUI();
+            console.log('Health data loaded:', allSymptoms.length, 'symptoms');
+        } catch (err) {
+            console.error('Failed to load health data:', err);
+        }
+    }
+
+    // Parse uploaded reports for symptoms
+    function parseReports(files) {
+        selectedSymptoms.clear();
+        let parsedCount = 0;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                let content = e.target.result;
+                // Try JSON parse first
+                try {
+                    const jsonData = JSON.parse(content);
+                    if (jsonData.symptoms) {
+                        jsonData.symptoms.forEach(sym => {
+                            const normalized = sym.toLowerCase().replace(/ /g, '_');
+                            if (allSymptoms.includes(normalized)) {
+                                selectedSymptoms.add(normalized);
+                                parsedCount++;
+                            }
+                        });
+                    }
+                } catch {
+                    // Text/keyword extract
+                    const text = content.toLowerCase();
+                    allSymptoms.forEach(sym => {
+                        if (text.includes(sym.replace(/_/g, ' ')) || text.includes(sym)) {
+                            selectedSymptoms.add(sym);
+                            parsedCount++;
+                        }
+                    });
+                }
+                if (parsedCount > 0) {
+                    updateSymptomsUI();
+                    showParsedPreview(Array.from(selectedSymptoms));
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    // Update dynamic symptoms UI
+    function updateSymptomsUI(searchTerm = '') {
+        const container = document.getElementById('symptomsSelect');
+        if (!allSymptoms.length) {
+            container.innerHTML = '<p>Loading symptoms...</p>';
+            return;
+        }
+        const filtered = allSymptoms.filter(sym => 
+            sym.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        container.innerHTML = filtered.map(sym => {
+            const checked = selectedSymptoms.has(sym) ? 'checked' : '';
+            return `
+                <label class="checkbox-item symptom-chip">
+                    <input type="checkbox" value="${sym}" ${checked} onchange="toggleSymptom('${sym}')">
+                    <span>${sym.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                </label>
+            `;
+        }).join('') || '<p>No matching symptoms</p>';
+    }
+
+    // Toggle symptom selection
+    window.toggleSymptom = function(sym) {
+        if (selectedSymptoms.has(sym)) {
+            selectedSymptoms.delete(sym);
+        } else {
+            selectedSymptoms.add(sym);
+        }
+        showParsedPreview(Array.from(selectedSymptoms));
+    };
+
+    // Show parsed symptoms preview
+    function showParsedPreview(symptoms) {
+        const preview = document.getElementById('parsedPreview');
+        preview.innerHTML = `
+            <strong>Parsed/Auto-selected (${symptoms.length}):</strong>
+            <div class="chips-container">${symptoms.slice(0, 10).map(s => 
+                `<span class="chip">${s.replace(/_/g, ' ')}</span>`
+            ).join('')} ${symptoms.length > 10 ? `... +${symptoms.length-10}` : ''}</div>
+        `;
+        preview.classList.remove('hidden');
     }
 
     // Tab switch
@@ -160,27 +268,106 @@ document.addEventListener('DOMContentLoaded', function() {
         if (h && w) document.getElementById('bmiVal').textContent = (w / ((h/100)**2)).toFixed(1);
     };
 
-    ['age','bp','cholesterol'].forEach(id => {
+    // Age input handler
+    document.getElementById('age').oninput = () => {
+        document.getElementById('ageVal').textContent = document.getElementById('age').value;
+    };
+    // BP/Cholesterol sliders
+    ['bp','cholesterol'].forEach(id => {
         document.getElementById(id).oninput = () => document.getElementById(id+'Val').textContent = document.getElementById(id).value;
     });
+
+    // Enhanced prediction with symptoms
+    function calculatePrediction(formData, symptoms) {
+        let baseScore = 85;
+        let risks = [];
+        let riskScore = 0;
+
+        // Basic factors
+        const age = parseInt(formData.age);
+        const bmi = parseFloat(formData.bmi);
+        const bp = parseInt(formData.bp);
+        const chol = parseInt(formData.cholesterol);
+
+        if (age > 60) riskScore += 15;
+        if (bmi > 30) riskScore += 20;
+        if (bp > 140) riskScore += 15;
+        if (chol > 240) riskScore += 10;
+
+        // Symptom risks
+        const symCount = symptoms.length;
+        if (symCount > 3) riskScore += symCount * 3;
+        
+        symptomsMap.criticalSymptoms?.forEach(sym => {
+            if (symptoms.includes(sym)) {
+                riskScore += 20;
+                risks.push(`Critical: ${sym.replace(/_/g, ' ')}`);
+            }
+        });
+
+        Object.entries(symptomsMap.riskMultipliers || {}).forEach(([risk, syms]) => {
+            const matchCount = syms.filter(s => symptoms.includes(s)).length;
+            if (matchCount > 0) {
+                riskScore += matchCount * 5;
+                risks.push(`${risk} risk (${matchCount} matching symptoms)`);
+            }
+        });
+
+        baseScore -= Math.min(riskScore, 70);
+        const prediction = {
+            score: baseScore,
+            risks: risks.slice(0, 5),
+            symptoms: symptoms.slice(0, 10),
+            age, bmi, bp, chol
+        };
+
+        return prediction;
+    }
 
     healthForm.onsubmit = e => {
         e.preventDefault();
         if (!currentUser) return showAuth();
+        if (!diseasesData) {
+            alert('Loading health data... Please wait.');
+            return;
+        }
         
-        // Simple prediction
-        const score = 85 - Math.random()*20;
-        results.classList.remove('hidden');
-        document.getElementById('healthScore').textContent = Math.round(score);
-        document.getElementById('riskList').innerHTML = '<li>Test risk</li>';
-        document.getElementById('adviceText').textContent = 'Great health!';
-        
-        // Save prediction
-        currentUser.predictions.push({score, date: new Date().toISOString()});
-        saveUsers();
-        downloadUsers();
-        
-        loadUserHistory();
+        const formData = {
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            bmi: document.getElementById('bmiVal').textContent,
+            bp: document.getElementById('bp').value,
+            cholesterol: document.getElementById('cholesterol').value
+        };
+        const symptoms = Array.from(selectedSymptoms);
+
+        loading.classList.remove('hidden');
+        results.classList.add('hidden');
+
+        // Simulate AI
+        setTimeout(() => {
+            loading.classList.add('hidden');
+            const prediction = calculatePrediction(formData, symptoms);
+            
+            document.getElementById('healthScore').textContent = Math.round(prediction.score);
+            document.getElementById('riskList').innerHTML = prediction.risks.map(risk => `<li>${risk}</li>`).join('');
+            document.getElementById('adviceText').textContent = 
+                prediction.score > 70 ? 'Excellent health! Maintain lifestyle.' :
+                prediction.score > 50 ? 'Moderate risks detected. Consult doctor for checkup.' :
+                'High risks. Seek immediate medical attention.';
+
+            // Save enhanced prediction
+            currentUser.predictions.push({
+                prediction,
+                date: new Date().toISOString(),
+                symptomsCount: symptoms.length
+            });
+            saveUsers();
+            downloadUsers();
+            
+            loadUserHistory();
+            results.classList.remove('hidden');
+        }, 2000);
     };
 });
 

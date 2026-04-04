@@ -77,8 +77,9 @@
             <form id="healthForm" class="health-form">
                 <div class="form-grid">
                     <div class="input-group">
-                        <label>Age <span id="ageVal">30</span></label>
-                        <input type="range" id="age" min="18" max="100" value="30">
+                        <label>Age</label>
+                        <input type="number" id="age" min="0" max="120" value="30" step="1">
+                        <span id="ageVal">30</span>
                     </div>
                     <div class="input-group">
                         <label>Gender</label>
@@ -104,15 +105,26 @@
                         <input type="range" id="cholesterol" min="100" max="400" value="180">
                     </div>
                 </div>
-                <div class="symptoms-group">
-                    <label>Symptoms</label>
-                    <div class="checkbox-grid">
-                        <label class="checkbox-item"><input type="checkbox" name="symptoms" value="fatigue"> Fatigue</label>
-                        <label class="checkbox-item"><input type="checkbox" name="symptoms" value="chest_pain"> Chest Pain</label>
-                        <label class="checkbox-item"><input type="checkbox" name="symptoms" value="short_breath"> Short Breath</label>
-                        <label class="checkbox-item"><input type="checkbox" name="symptoms" value="frequent_urination"> Frequent Urination</label>
-                        <label class="checkbox-item"><input type="checkbox" name="symptoms" value="headache"> Headache</label>
+<div class="symptoms-group">
+                    <label>Symptoms & Doctor Reports</label>
+                    
+                    <!-- Upload Section -->
+                    <div class="upload-zone">
+                        <input type="file" id="reportUpload" accept=".json,.txt,.pdf,.docx" multiple>
+                        <label for="reportUpload" class="upload-label">
+                            📁 Upload Doctor Reports (JSON/TXT/PDF)
+                        </label>
+                        <small>AI will parse symptoms automatically</small>
                     </div>
+                    
+                    <!-- Dynamic Symptoms -->
+                    <div class="symptoms-search">
+                        <input type="text" id="symptomsSearch" placeholder="🔍 Search symptoms or diseases...">
+                    </div>
+                    <div id="symptomsSelect" class="symptoms-select"></div>
+                    
+                    <!-- Parsed Preview -->
+                    <div id="parsedPreview" class="parsed-preview hidden"></div>
                 </div>
                 <button type="submit" class="predict-btn gradient-btn">🚀 Analyze with AI</button>
             </form>
