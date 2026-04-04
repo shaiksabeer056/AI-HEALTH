@@ -1,10 +1,11 @@
-# AI Health Predictor TODO
+# TODO: Add Login Functionality
 
-- [x] Create README.md with instructions
-- [x] Create index.html (main UI, form, results)
-- [x] Create styles.css (responsive styling)
-- [x] Create script.js (form logic, mock AI prediction, charts)
-- [x] Test by opening index.html
-- [x] (Done) Present completion
+✅ 1. Create TODO.md with steps (done)
+✅ 2. Edit index.html - add login form and app wrapper
+✅ 3. Edit script.js - add auth logic, protect form
+✅ 4. Edit styles.css - add login styles
 
-Updated after each step.
+⏳ 5. Test and update README.md
+
+⏳ 6. Complete task
+
