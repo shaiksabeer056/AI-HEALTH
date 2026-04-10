@@ -37,5 +37,3 @@ Pure HTML/CSS/JS. No server needed!
 - Client-side parsing, localStorage + JSON export.
 - Responsive, mock neural scoring w/ symptom integration.
 - data/diseases.json (200+ world diseases), symptoms-map.json (risks).
-
-Built by BLACKBOXAI.
